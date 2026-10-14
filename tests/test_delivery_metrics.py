@@ -45,17 +45,18 @@ class DeliveryMetricsTest(unittest.TestCase):
             "delivered_date": pd.to_datetime(["2018-01-05"] * 3),
         })
         result = delivery_clues(rows).set_index("order_id")
-        self.assertEqual(result.loc["before", "handoff_clue"], "交接时未过承诺日")
-        self.assertEqual(result.loc["after", "handoff_clue"], "交接时已过承诺日")
-        self.assertEqual(result.loc["missing", "handoff_clue"], "交接时间缺失")
+        self.assertEqual(result.loc["before", "handoff_clue"], "Handed off by promised date")
+        self.assertEqual(result.loc["after", "handoff_clue"], "Handed off after promised date")
+        self.assertEqual(result.loc["missing", "handoff_clue"], "Handoff date missing")
         self.assertEqual(result.loc["before", "handoff_to_delivery_days"], 3)
 
     def test_late_rate_status_boundaries(self):
-        self.assertEqual(late_rate_status(0.049)[0], "较低")
-        self.assertEqual(late_rate_status(0.05)[0], "需要关注")
-        self.assertEqual(late_rate_status(0.15)[0], "需要关注")
-        self.assertEqual(late_rate_status(0.151)[0], "高风险")
+        self.assertEqual(late_rate_status(0.049)[0], "Low")
+        self.assertEqual(late_rate_status(0.05)[0], "Needs attention")
+        self.assertEqual(late_rate_status(0.15)[0], "Needs attention")
+        self.assertEqual(late_rate_status(0.151)[0], "High risk")
 
 
 if __name__ == "__main__":
     unittest.main()
+
