@@ -12,6 +12,7 @@ from delivery_metrics import (
     ANALYSIS_END,
     ANALYSIS_START,
     analysis_orders,
+    delivery_clues,
     load_orders,
     state_rates,
     summary,
@@ -208,37 +209,54 @@ with right:
         )
         st.plotly_chart(fig, width="stretch", config={"displayModeBar": False}, alt="延迟订单数最多的目的地州")
 
-st.html('<div class="section-kicker">03 / 订单明细</div>')
-st.html('<div class="section-title">供复盘的延迟订单</div>')
-st.html('<div class="section-subtitle">优先查看延迟天数较长的历史订单；这不是当前待处理工单队列。</div>')
+st.html('<div class="section-kicker">03 / 归因线索</div>')
+st.html('<div class="section-title">延迟订单：交接时点与商品类别</div>')
+st.html('<div class="section-subtitle">前 20 笔延迟最久的订单；显示可核查的时间与类别，不自动判定责任方。</div>')
 late_detail = (
-    filtered.loc[filtered["is_late"], [
+    delivery_clues(filtered).loc[:, [
         "order_id",
         "customer_state",
+        "product_categories",
         "promise_date",
+        "handoff_date",
         "delivered_date",
         "late_days",
+        "handoff_to_delivery_days",
+        "handoff_clue",
     ]]
     .sort_values("late_days", ascending=False)
     .head(20)
     .rename(columns={
         "order_id": "订单 ID",
         "customer_state": "目的地州",
+        "product_categories": "商品类别",
         "promise_date": "承诺送达",
+        "handoff_date": "交给承运商",
         "delivered_date": "实际送达",
         "late_days": "延迟天数",
+        "handoff_to_delivery_days": "交接后天数",
+        "handoff_clue": "交接时点线索",
     })
 )
+late_detail["商品类别"] = late_detail["商品类别"].fillna("未标注")
 st.dataframe(
     late_detail,
     hide_index=True,
     width="stretch",
-    alt="延迟天数最长的二十笔历史订单",
+    alt="延迟天数最长的二十笔订单及其交接时点和商品类别线索",
     column_config={
         "承诺送达": st.column_config.DateColumn(format="YYYY-MM-DD"),
+        "交给承运商": st.column_config.DateColumn(format="YYYY-MM-DD"),
         "实际送达": st.column_config.DateColumn(format="YYYY-MM-DD"),
         "延迟天数": st.column_config.NumberColumn(format="%d 天"),
+        "交接后天数": st.column_config.NumberColumn(format="%d 天"),
     },
+)
+st.html(
+    "<div class='footnote'><b>如何读这张表：</b>“交接时已过承诺日”说明延误在交给承运商之前已出现，但不能证明是仓库造成；"
+    "“交接时未过承诺日”而最终延迟，提示进一步核对配送环节，仍不能证明快递公司责任。"
+    "商品类别仅为关联信息，一笔订单可含多个类别。公开数据没有仓库或承运商 ID，无法按责任方可靠归因。"
+    "交接后天数按日历日期计算；时间戳异常需回查原记录。</div>"
 )
 st.html(
     "<div class='footnote'>口径：只包括状态为 delivered、承诺与实际送达日期都有效的订单；"

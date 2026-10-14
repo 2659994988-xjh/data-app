@@ -77,3 +77,15 @@ def state_rates(df: pd.DataFrame, minimum_orders: int = 200) -> pd.DataFrame:
     grouped = grouped.loc[grouped["orders"] >= minimum_orders].copy()
     grouped["late_rate"] = grouped["late_orders"] / grouped["orders"]
     return grouped.sort_values(["late_orders", "late_rate"], ascending=False)
+
+
+def delivery_clues(df: pd.DataFrame) -> pd.DataFrame:
+    """Label observable handoff timing, without assigning a cause or carrier."""
+    late = df.loc[df["is_late"]].copy()
+    handoff = late["order_delivered_carrier_date"].dt.normalize()
+    late["handoff_date"] = handoff
+    late["handoff_to_delivery_days"] = (late["delivered_date"] - handoff).dt.days
+    late["handoff_clue"] = "交接时未过承诺日"
+    late.loc[handoff.isna(), "handoff_clue"] = "交接时间缺失"
+    late.loc[handoff.gt(late["promise_date"]), "handoff_clue"] = "交接时已过承诺日"
+    return late

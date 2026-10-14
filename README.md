@@ -7,8 +7,8 @@
 ## 1. Dataset and decision-maker
 
 - **Source:** [Brazilian E-Commerce Public Dataset by Olist on Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce), published by Olist. Olist describes it as anonymized **real commercial data** from about 100,000 orders placed in 2016–2018 across Brazilian marketplaces. License shown on Kaggle: CC BY-NC-SA 4.0.
-- **One row:** one order. The app uses order status, purchase date, carrier hand-off date, actual delivery date, promised delivery date, and destination state. It does **not** use a sales line as an order: a single order can have multiple items.
-- **Committed file:** [`data/olist_delivery_orders.csv`](data/olist_delivery_orders.csv), 99,441 rows and 12.54 MB. It was created by a many-to-one join of the original `olist_orders_dataset.csv` and `olist_customers_dataset.csv` on `customer_id`. No orders were sampled or fabricated, and all 99,441 orders remained after the join. The original 44.7 MB ZIP is excluded from the repository. Reproduce the file with `python scripts/prepare_data.py path/to/olist.zip`.
+- **One row:** one order. The app uses order status, purchase date, carrier hand-off date, actual delivery date, promised delivery date, destination state, and product categories. A single order can have multiple items and categories; its categories are combined into one field.
+- **Committed file:** [`data/olist_delivery_orders.csv`](data/olist_delivery_orders.csv), 99,441 rows and about 13.90 MB. It joins the original orders to customers on `customer_id` and aggregates item/product categories by `order_id`. Joins are validated so each order remains one row. No orders were sampled or fabricated. The original ZIP is excluded from the repository. Reproduce the file with `python scripts/prepare_data.py path/to/olist.zip`.
 - **Analysis window:** promised delivery dates **2017-03-01 to 2018-08-31**. The raw file extends from September 2016 to November 2018, but the early and late promise months have very few or incomplete observations. The default dashboard excludes those edge months; the source CSV preserves them for audit.
 - **Decision-maker:** one role, the **Olist logistics operations manager**, who reviews service reliability by destination and coordinates investigation with fulfilment and carrier teams.
 
@@ -28,7 +28,7 @@ An **eligible order** has `order_status == "delivered"` and valid actual and pro
 2. **Late orders** = count of eligible orders whose actual date is after the promise date.
 3. **Median days late** = median of positive calendar-day differences for late orders only. This resists a few extreme delays.
 
-**Supporting charts:** (1) weekly late rate answers *when* performance changed; (2) destination states ranked by **late-order count** answers *where the most affected orders are*. The second chart includes rate and sample count in hover text, and excludes states with fewer than 200 eligible orders in the selected period. The top 20 late orders appear below for historical investigation. Only promised-date and single destination-state filters are included, because these change the manager's review.
+**Supporting charts:** (1) weekly late rate answers *when* performance changed; (2) destination states ranked by **late-order count** answers *where the most affected orders are*. The second chart includes rate and sample count in hover text, and excludes states with fewer than 200 eligible orders in the selected period. The top 20 late orders appear below for historical investigation. Their table shows product categories, hand-off date, hand-off-to-delivery days, and whether hand-off had already missed the promise date. Only promised-date and single destination-state filters are included, because these change the manager's review.
 
 **Page order:** title and decision → three headline metrics → two diagnostic charts → order detail → definition and limitation. It follows the manager's path from “is there a problem?” to “where should I look?”
 
@@ -47,6 +47,7 @@ Risks of misinterpretation:
 - **Historical snapshot.** Kaggle marks the dataset's expected update frequency as **never**. The page must not be presented as live 2026 Olist performance.
 - **Incomplete edge months.** Sparse 2016 and late-2018 promise months are outside the default window. An incomplete recent cohort should likewise be withheld in production until outcomes mature.
 - **No causal claim from geography.** Destination state locates an investigation; the data does not isolate carrier, distance, warehouse, weather, or seller effects. Extremely small state samples are withheld from the ranking.
+- **No warehouse/carrier attribution.** The source has no warehouse ID or carrier company ID. Hand-off after the promised day proves the promise was already missed before carrier hand-off, but does not prove a warehouse fault. Hand-off on or before the promise day followed by late delivery suggests investigating the downstream journey, but does not prove carrier fault. A product category is an association, not a cause. Orders can contain multiple categories.
 - **Extreme delays.** A few delivered orders appear more than 100 days late. The median KPI reduces their influence, while the detail table keeps them visible for source-record verification; they are not silently discarded.
 
 ## 4. Refresh and action rule

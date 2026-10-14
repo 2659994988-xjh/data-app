@@ -4,7 +4,7 @@ import unittest
 
 import pandas as pd
 
-from delivery_metrics import analysis_orders, load_orders, summary, weekly_rates
+from delivery_metrics import analysis_orders, delivery_clues, load_orders, summary, weekly_rates
 
 
 class DeliveryMetricsTest(unittest.TestCase):
@@ -35,6 +35,20 @@ class DeliveryMetricsTest(unittest.TestCase):
         self.assertEqual(summary(result)["late_rate"], 0.5)
         self.assertEqual(summary(result)["median_late_days"], 1.0)
         self.assertEqual(weekly_rates(result)["orders"].sum(), 2)
+
+    def test_handoff_clues_are_timing_labels(self):
+        rows = pd.DataFrame({
+            "order_id": ["before", "after", "missing"],
+            "is_late": [True, True, True],
+            "order_delivered_carrier_date": pd.to_datetime(["2018-01-02", "2018-01-04", None]),
+            "promise_date": pd.to_datetime(["2018-01-03"] * 3),
+            "delivered_date": pd.to_datetime(["2018-01-05"] * 3),
+        })
+        result = delivery_clues(rows).set_index("order_id")
+        self.assertEqual(result.loc["before", "handoff_clue"], "交接时未过承诺日")
+        self.assertEqual(result.loc["after", "handoff_clue"], "交接时已过承诺日")
+        self.assertEqual(result.loc["missing", "handoff_clue"], "交接时间缺失")
+        self.assertEqual(result.loc["before", "handoff_to_delivery_days"], 3)
 
 
 if __name__ == "__main__":
