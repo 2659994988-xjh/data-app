@@ -28,6 +28,8 @@ An **eligible order** has `order_status == "delivered"` and valid actual and pro
 2. **Late orders** = count of eligible orders whose actual date is after the promise date.
 3. **Median days late** = median of positive calendar-day differences for late orders only. This resists a few extreme delays.
 
+The late-rate card shows a **proposed review status for the selected date and state filters**: below 5% = lower, 5% through 15% = attention, above 15% = high risk (red). These are illustrative operating bands requested for the prototype, **not** an Olist service-level target or a live alert. The percentage and status are calculated from the same filtered eligible-order denominator.
+
 **Supporting charts:** (1) weekly late rate answers *when* performance changed; (2) destination states ranked by **late-order count** answers *where the most affected orders are*. The second chart includes rate and sample count in hover text, and excludes states with fewer than 200 eligible orders in the selected period. The top 20 late orders appear below for historical investigation. Their table shows product categories, hand-off date, hand-off-to-delivery days, and whether hand-off had already missed the promise date. Only promised-date and single destination-state filters are included, because these change the manager's review.
 
 **Page order:** title and decision → three headline metrics → two diagnostic charts → order detail → definition and limitation. It follows the manager's path from “is there a problem?” to “where should I look?”

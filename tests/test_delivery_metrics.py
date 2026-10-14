@@ -4,7 +4,7 @@ import unittest
 
 import pandas as pd
 
-from delivery_metrics import analysis_orders, delivery_clues, load_orders, summary, weekly_rates
+from delivery_metrics import analysis_orders, delivery_clues, late_rate_status, load_orders, summary, weekly_rates
 
 
 class DeliveryMetricsTest(unittest.TestCase):
@@ -49,6 +49,12 @@ class DeliveryMetricsTest(unittest.TestCase):
         self.assertEqual(result.loc["after", "handoff_clue"], "交接时已过承诺日")
         self.assertEqual(result.loc["missing", "handoff_clue"], "交接时间缺失")
         self.assertEqual(result.loc["before", "handoff_to_delivery_days"], 3)
+
+    def test_late_rate_status_boundaries(self):
+        self.assertEqual(late_rate_status(0.049)[0], "较低")
+        self.assertEqual(late_rate_status(0.05)[0], "需要关注")
+        self.assertEqual(late_rate_status(0.15)[0], "需要关注")
+        self.assertEqual(late_rate_status(0.151)[0], "高风险")
 
 
 if __name__ == "__main__":

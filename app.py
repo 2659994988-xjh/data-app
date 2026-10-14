@@ -13,6 +13,7 @@ from delivery_metrics import (
     ANALYSIS_START,
     analysis_orders,
     delivery_clues,
+    late_rate_status,
     load_orders,
     state_rates,
     summary,
@@ -59,6 +60,12 @@ html, body, [class*="css"], [data-testid="stApp"] {font-family: 'DM Sans','Noto 
 [data-testid="stMetricValue"] {color: #11233f; font-size: 2rem; font-weight: 700;}
 .insight {background: #e9f5f2; border-left: 4px solid #087f79; border-radius: 0 12px 12px 0; padding: 12px 16px; color: #193d48; font-size: .91rem; margin: 11px 0 16px;}
 .footnote {font-size: .79rem; color: #66758b; line-height: 1.5;}
+.rate-status {display: inline-flex; align-items: center; gap: .45rem; margin-top: .55rem; padding: .4rem .72rem; border-radius: 999px; font-size: .83rem; font-weight: 700;}
+.rate-status.good {background: #e5f5ef; color: #086b52;}
+.rate-status.warning {background: #fff1d8; color: #965600;}
+.rate-status.danger {background: #fde8e6; color: #bd2c2c;}
+[data-testid="stColumn"]:has(.rate-status.danger) [data-testid="stMetricValue"] {color: #bd2c2c;}
+.threshold-note {font-size: .78rem; color: #66758b; margin: .38rem 0 0;}
 </style>
 """,
 )
@@ -129,10 +136,16 @@ if filtered.empty:
     st.stop()
 
 metrics = summary(filtered)
+status_label, status_band, status_tone = late_rate_status(metrics["late_rate"])
 st.html('<div class="section-kicker">01 / 核心指标</div>')
 columns = st.columns(3, gap="medium")
 with columns[0]:
     st.metric("延迟交付率", f"{metrics['late_rate']:.1%}", help="延迟订单数 ÷ 有有效日期的已送达订单数", border=True)
+    st.html(
+        f'<div class="rate-status {status_tone}" role="status">'
+        f'所选区间状态：{status_label} · {status_band}</div>'
+        '<div class="threshold-note">建议分级：&lt;5% 较低 · 5%–15% 关注 · &gt;15% 标红</div>'
+    )
 with columns[1]:
     st.metric("延迟订单", f"{metrics['late_orders']:,}", help="实际送达日期晚于承诺送达日期", border=True)
 with columns[2]:

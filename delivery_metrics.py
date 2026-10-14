@@ -55,6 +55,15 @@ def summary(df: pd.DataFrame) -> dict[str, float | int]:
     }
 
 
+def late_rate_status(rate: float) -> tuple[str, str, str]:
+    """Proposed review bands for the selected historical cohort, not an Olist SLA."""
+    if rate > 0.15:
+        return "高风险", "> 15%", "danger"
+    if rate >= 0.05:
+        return "需要关注", "5%–15%", "warning"
+    return "较低", "< 5%", "good"
+
+
 def weekly_rates(df: pd.DataFrame) -> pd.DataFrame:
     if df.empty:
         return pd.DataFrame(columns=["week", "orders", "late_orders", "late_rate"])
