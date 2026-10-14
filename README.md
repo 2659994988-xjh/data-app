@@ -1,2 +1,77 @@
-# data-app
-DATA APP
+# XuJinghan · Delivery Lens · Olist 订单延迟交付监控
+
+**BANA409 in-class data app exercise.** This repository contains a Streamlit dashboard and its documented business decisions. The [class exercise](https://bana409.harrywang.me/docs/lectures/data-app/in-class-group-exercise) emphasizes the choice of decision-maker, metrics, page order, refresh cadence, and limitations over the number of features.
+
+> **One decision:** If the Olist logistics operations manager sees that the weekly late-delivery rate rises and a destination state accounts for many late orders, they will investigate that state's fulfilment and carrier records and coordinate corrective action. The state breakdown is a *triage signal*, not proof that the destination caused the delay.
+
+## 1. Dataset and decision-maker
+
+- **Source:** [Brazilian E-Commerce Public Dataset by Olist on Kaggle](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce), published by Olist. Olist describes it as anonymized **real commercial data** from about 100,000 orders placed in 2016–2018 across Brazilian marketplaces. License shown on Kaggle: CC BY-NC-SA 4.0.
+- **One row:** one order. The app uses order status, purchase date, carrier hand-off date, actual delivery date, promised delivery date, and destination state. It does **not** use a sales line as an order: a single order can have multiple items.
+- **Committed file:** [`data/olist_delivery_orders.csv`](data/olist_delivery_orders.csv), 99,441 rows and 12.54 MB. It was created by a many-to-one join of the original `olist_orders_dataset.csv` and `olist_customers_dataset.csv` on `customer_id`. No orders were sampled or fabricated, and all 99,441 orders remained after the join. The original 44.7 MB ZIP is excluded from the repository. Reproduce the file with `python scripts/prepare_data.py path/to/olist.zip`.
+- **Analysis window:** promised delivery dates **2017-03-01 to 2018-08-31**. The raw file extends from September 2016 to November 2018, but the early and late promise months have very few or incomplete observations. The default dashboard excludes those edge months; the source CSV preserves them for audit.
+- **Decision-maker:** one role, the **Olist logistics operations manager**, who reviews service reliability by destination and coordinates investigation with fulfilment and carrier teams.
+
+## 2. Why this is a dashboard
+
+Delivery promises are made continuously, so the manager must repeat the same check. Without this view, they could pull separate order exports, manually compare promised and actual dates, and group exceptions by week and state. That adds recurring analyst time and can delay recognition of a service problem. We do **not** claim a quantified cost because the public data has no complaint cost or service-level contract.
+
+A static report becomes stale as new orders arrive. A weekly email can report one average but is awkward for changing the date or destination and inspecting the underlying orders. An alert is suitable for a single severe breach; this dashboard provides recurring context and a prioritization list. In the production scenario, the manager would review it **each Monday** and assign investigation of the relevant region and weeks.
+
+## 3. What is shown, and what is cut
+
+### Metric definitions
+
+An **eligible order** has `order_status == "delivered"` and valid actual and promised delivery dates. Both timestamps are reduced to **calendar dates**; delivery later on the promised day is still on time. A **late order** has `actual delivery date > promised delivery date`.
+
+1. **Late-delivery rate** = late eligible orders / all eligible orders within the filters. The denominator is visible in chart hover text and is not all orders placed.
+2. **Late orders** = count of eligible orders whose actual date is after the promise date.
+3. **Median days late** = median of positive calendar-day differences for late orders only. This resists a few extreme delays.
+
+**Supporting charts:** (1) weekly late rate answers *when* performance changed; (2) destination states ranked by **late-order count** answers *where the most affected orders are*. The second chart includes rate and sample count in hover text, and excludes states with fewer than 200 eligible orders in the selected period. The top 20 late orders appear below for historical investigation. Only promised-date and single destination-state filters are included, because these change the manager's review.
+
+**Page order:** title and decision → three headline metrics → two diagnostic charts → order detail → definition and limitation. It follows the manager's path from “is there a problem?” to “where should I look?”
+
+**Deliberately excluded:**
+
+- Payment method and basket value: interesting commercial fields, but they do not change the logistics manager's first investigation decision and require extra joins.
+- Customer review scores: reviews might show an association with delay, but they are a different outcome and can be missing or influenced by other causes. Adding them would distract from delivery reliability.
+
+### Quick EDA and limitations
+
+The notebook [`notebooks/eda.ipynb`](notebooks/eda.ipynb) checks shape, missing values, status distribution, lateness distribution, weekly trends, and state differences with Pandas and Matplotlib. Observed in the full committed file: 99,441 unique orders; 2,965 missing actual-delivery timestamps; 1,783 missing carrier hand-off timestamps; 96,478 orders marked delivered. Eight delivered orders also lack an actual timestamp, so 96,470 delivered orders have enough dates for the lateness calculation across the full snapshot. In the chosen complete-month window there are **93,901 eligible orders and 6,520 late orders (6.94%)**.
+
+Risks of misinterpretation:
+
+- **Retrospective, delivered-only measure.** Undelivered, cancelled, or unavailable orders are not counted as on time or late. This is not a current overdue-order queue and may understate customer-facing delivery failures. A production version should monitor open overdue orders separately.
+- **Historical snapshot.** Kaggle marks the dataset's expected update frequency as **never**. The page must not be presented as live 2026 Olist performance.
+- **Incomplete edge months.** Sparse 2016 and late-2018 promise months are outside the default window. An incomplete recent cohort should likewise be withheld in production until outcomes mature.
+- **No causal claim from geography.** Destination state locates an investigation; the data does not isolate carrier, distance, warehouse, weather, or seller effects. Extremely small state samples are withheld from the ranking.
+- **Extreme delays.** A few delivered orders appear more than 100 days late. The median KPI reduces their influence, while the detail table keeps them visible for source-record verification; they are not silently discarded.
+
+## 4. Refresh and action rule
+
+**Prototype:** fixed Kaggle snapshot, no automatic data refresh. The app explicitly displays its 2017–2018 analysis period.
+
+**Real Olist workflow:** ingest order and carrier status updates **nightly** after the daily fulfilment close; refresh the metrics the next morning. The manager reviews the dashboard **every Monday**. Weekly rate should be computed from promise-date cohorts after enough time for delivery status to settle. This cadence is fast enough for a weekly coordination meeting and avoids the cost and noise of recalculating an aggregate dashboard every minute. A separate operational alert would handle an individual order already past promise while still undelivered.
+
+**Proposed investigation trigger, not an Olist SLA:** investigate if a completed week's late rate is at least **3 percentage points above the previous four completed weeks' combined rate**, provided the week has at least **100 eligible orders**. Check the affected destination states and underlying carrier hand-off records before assigning a cause. This is a starting rule to validate against future data, not a threshold inferred from a contractual target.
+
+If the feed is stale by a day, the weekly review might miss recently delivered exceptions. A week of stale data could delay identifying a broad regional deterioration until the following meeting. The dashboard should display its latest ingested date in a live deployment.
+
+## 5. Run locally and deploy
+
+This repository was initialized with `uv init`. Run from the repository root:
+
+```bash
+uv sync
+uv run streamlit run app.py
+```
+
+Or install `requirements.txt` in a Python environment and run `streamlit run app.py`.
+
+For **Streamlit Community Cloud**, select this public GitHub repository and `app.py` as the entry point, set Python to **3.14** under Advanced settings as required by the course, then deploy. The data file is committed, so no Kaggle credential is needed at app runtime. Submit the deployed app URL and the repository URL individually on Canvas. The user will perform this deployment step.
+
+## Source and transformation
+
+Original data: Olist, [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce). The compact CSV is an attributed educational derivative retaining the source's anonymized order data. Preparation code and the exact exclusions are in this repository. The repository's MIT `LICENSE` applies to the original app code; the Olist-derived CSV remains under the dataset's CC BY-NC-SA 4.0 terms.

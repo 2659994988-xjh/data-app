@@ -218,3 +218,9 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Local source archive and course-page audit
+olist.zip
+assignment-page.html
+.uv-cache/
+.uv-python/
