@@ -14,9 +14,13 @@
 
 ## 2. Why this is a dashboard
 
-Delivery promises are made continuously, so the manager must repeat the same check. Without this view, they could pull separate order exports, manually compare promised and actual dates, and group exceptions by week and state. That adds recurring analyst time and can delay recognition of a service problem. We do **not** claim a quantified cost because the public data has no complaint cost or service-level contract.
+1. **Who looks at it, and how often?** The intended viewer is the **Olist logistics operations manager**. In a production workflow, they would review it **every Monday** to assess the last completed weeks. Order and carrier data would refresh nightly; the public Kaggle snapshot in this prototype does not refresh.
 
-A static report becomes stale as new orders arrive. A weekly email can report one average but is awkward for changing the date or destination and inspecting the underlying orders. An alert is suitable for a single severe breach; this dashboard provides recurring context and a prioritization list. In the production scenario, the manager would review it **each Monday** and assign investigation of the relevant region and weeks.
+2. **What decision does it support?** *If the logistics operations manager sees that a completed week's late-delivery rate is at least 3 percentage points above the previous four completed weeks' combined rate, with at least 100 eligible orders, they will inspect the affected destination states and underlying handoff records, then coordinate an investigation with fulfilment and carrier teams.* This is a proposed investigation rule, not an Olist contractual target. The red **>15%** card status is a simpler visual prompt for the selected period; it is not proof of a cause or an automatic alert.
+
+3. **What do they do without it, and what does that cost?** They would export order and carrier records, match promised and actual delivery dates, calculate late rates by week, and compare destination states manually. Repeating those steps takes analyst time and can delay noticing a deterioration or prioritizing the wrong region. The public dataset contains no staff-time records, complaint costs, or service-level penalties, so a monetary or hourly saving cannot be estimated credibly.
+
+4. **Why a dashboard rather than a weekly email, report, or alert?** The manager needs to repeat the check and change the date or state filter when a rate worsens. A weekly email can announce one summary number, but cannot readily show the trend, regional breakdown, and underlying orders for follow-up. A static report becomes outdated as new orders arrive. A single-threshold alert is useful for an urgent breach, but lacks the context needed to choose where to investigate. The dashboard keeps those views together for the weekly review; a production alert could complement it for urgent exceptions.
 
 ## 3. What is shown, and what is cut
 
