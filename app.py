@@ -149,18 +149,19 @@ if not regions.empty:
 
 st.html('<div class="section-kicker">02 / 定位变化</div>')
 st.html('<div class="section-title">何时变差，影响集中在哪里？</div>')
-st.html('<div class="section-subtitle">按承诺送达周计算趋势；地区图按延迟订单数排序，避免只盯高比率的小样本。</div>')
+st.html('<div class="section-subtitle">趋势图每个点代表一个承诺送达周，横轴只按月标日期以免拥挤；地区图按延迟订单数排序。</div>')
 
 left, right = st.columns([1.35, 1], gap="large")
 with left:
-    st.markdown("**每周延迟交付率**")
+    st.markdown("**每周延迟交付率 · 每点一周**")
     fig = go.Figure()
     fig.add_trace(
         go.Scatter(
             x=weekly["week"],
             y=weekly["late_rate"] * 100,
-            mode="lines",
+            mode="lines+markers",
             line=dict(color=TEAL, width=3),
+            marker=dict(size=5, color=TEAL),
             customdata=weekly[["late_orders", "orders"]].to_numpy(),
             hovertemplate="承诺周起始：%{x|%Y-%m-%d}<br>延迟率 %{y:.1f}%<br>延迟 %{customdata[0]:,} / %{customdata[1]:,} 笔<extra></extra>",
         )
@@ -172,7 +173,7 @@ with left:
         plot_bgcolor="#ffffff",
         showlegend=False,
         font=dict(family="DM Sans, Noto Sans SC", color=INK, size=12),
-        xaxis=dict(showgrid=False, tickformat="%Y-%m", tickangle=-35),
+        xaxis=dict(title="承诺送达周（日期刻度按月）", showgrid=False, tickformat="%Y-%m", tickangle=-35),
         yaxis=dict(title="延迟率 (%)", ticksuffix="%", gridcolor=GRID, zeroline=False, rangemode="tozero"),
         hoverlabel=dict(bgcolor=INK, font_color="#fff"),
     )
