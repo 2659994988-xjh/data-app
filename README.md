@@ -1,4 +1,4 @@
-# XuJinghan · Delivery Lens · Olist 订单延迟交付监控
+# XuJinghan · Delivery Lens · Olist Delivery Performance Monitor
 
 **BANA409 in-class data app exercise.** This repository contains a Streamlit dashboard and its documented business decisions. The [class exercise](https://bana409.harrywang.me/docs/lectures/data-app/in-class-group-exercise) emphasizes the choice of decision-maker, metrics, page order, refresh cadence, and limitations over the number of features.
 
@@ -78,3 +78,4 @@ For **Streamlit Community Cloud**, select this public GitHub repository and `app
 ## Source and transformation
 
 Original data: Olist, [Brazilian E-Commerce Public Dataset by Olist](https://www.kaggle.com/datasets/olistbr/brazilian-ecommerce). The compact CSV is an attributed educational derivative retaining the source's anonymized order data. Preparation code and the exact exclusions are in this repository. The repository's MIT `LICENSE` applies to the original app code; the Olist-derived CSV remains under the dataset's CC BY-NC-SA 4.0 terms.
+
