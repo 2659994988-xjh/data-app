@@ -36,7 +36,15 @@ The late-rate card shows a **proposed review status for the selected date and st
 
 **Supporting charts:** (1) weekly late rate answers *when* performance changed; (2) destination states ranked by **late-order count** answers *where the most affected orders are*. The second chart includes rate and sample count in hover text, and excludes states with fewer than 200 eligible orders in the selected period. The top 20 late orders appear below for historical investigation. Their table shows product categories, hand-off date, hand-off-to-delivery days, and whether hand-off had already missed the promise date. Only promised-date and single destination-state filters are included, because these change the manager's review.
 
-**Page order:** title and decision → three headline metrics → two diagnostic charts → order detail → definition and limitation. It follows the manager's path from “is there a problem?” to “where should I look?”
+**Why each element is where it is:**
+
+1. **Title, decision-maker caption, and data-period line at the top:** tell the manager immediately what the page is for and prevent the 2017–2018 snapshot from being mistaken for live performance.
+2. **Promised-date and destination-state filters in the sidebar:** set the scope for the whole review without interrupting the reading order. Both change which orders the manager investigates.
+3. **Three headline metrics and the rate-status badge first:** answer “is delivery reliability a concern in this selection?” within seconds. The rate shows scale, the late-order count shows volume, and median days late shows typical severity among late orders. The proposed status bands help scan the rate, but are not an Olist SLA.
+4. **Short investigation lead below the metrics:** points to the state with the most late orders before the manager reads the charts; it is a lead, not a causal conclusion.
+5. **Weekly trend and destination-state chart in the middle:** the first shows *when* the rate changed; the second shows *where* affected orders are concentrated. They support the next question after the headline metrics: “where should I look?”
+6. **Order table near the bottom:** provides IDs, dates, handoff timing, and product categories only after a pattern warrants a closer look. Putting 20 detailed rows above the summary would obscure the main decision.
+7. **Metric definitions and limitations last:** remain available for interpreting the numbers and investigating anomalies without pushing the headline result below the fold. The historical-data warning also appears at the top because it changes how every number should be read.
 
 **Deliberately excluded:**
 
