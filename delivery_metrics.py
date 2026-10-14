@@ -58,10 +58,10 @@ def summary(df: pd.DataFrame) -> dict[str, float | int]:
 def late_rate_status(rate: float) -> tuple[str, str, str]:
     """Proposed review bands for the selected historical cohort, not an Olist SLA."""
     if rate > 0.15:
-        return "高风险", "> 15%", "danger"
+        return "High risk", "> 15%", "danger"
     if rate >= 0.05:
-        return "需要关注", "5%–15%", "warning"
-    return "较低", "< 5%", "good"
+        return "Needs attention", "5%–15%", "warning"
+    return "Low", "< 5%", "good"
 
 
 def weekly_rates(df: pd.DataFrame) -> pd.DataFrame:
@@ -94,7 +94,8 @@ def delivery_clues(df: pd.DataFrame) -> pd.DataFrame:
     handoff = late["order_delivered_carrier_date"].dt.normalize()
     late["handoff_date"] = handoff
     late["handoff_to_delivery_days"] = (late["delivered_date"] - handoff).dt.days
-    late["handoff_clue"] = "交接时未过承诺日"
-    late.loc[handoff.isna(), "handoff_clue"] = "交接时间缺失"
-    late.loc[handoff.gt(late["promise_date"]), "handoff_clue"] = "交接时已过承诺日"
+    late["handoff_clue"] = "Handed off by promised date"
+    late.loc[handoff.isna(), "handoff_clue"] = "Handoff date missing"
+    late.loc[handoff.gt(late["promise_date"]), "handoff_clue"] = "Handed off after promised date"
     return late
+
